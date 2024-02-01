@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Generator</title>
+    <style>
+        /* Add the CSS code here */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #result {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #result p {
+            color: #007bff;
+        }
+    </style>
+
+</head>
+<body>
+    <h1>Game Generator</h1>
+    <form id="game-form">
+        <label for="number-of-games">Number of Games:</label>
+        <input type="number" id="number-of-games" name="number-of-games" value="1" min="1" required>
+
+        <label for="duration">Duration:</label>
+        <input type="number" id="duration" name="duration" required>
+        <select id="time-unit" name="time-unit">
+            <option value="seconds">Seconds</option>
+            <option value="minutes">Minutes</option>
+            <option value="hours">Hours</option>
+        </select>
+        <br>
+        <label for="style">Style:</label>
+        <select id="style" name="style">
+            <option value="attacking">Attacking</option>
+            <option value="defensive">Defensive</option>
+            <option value="normal">Normal</option>
+        </select>
+        <br>
+        <button type="submit">Generate Game</button>
+    </form>
+    
+    <div id="result"></div>
+    <script>
+        const gameForm = document.getElementById("game-form");
+const durationInput = document.getElementById("duration");
+const styleSelect = document.getElementById("style");
+const resultDiv = document.getElementById("result");
+
+function hideResultMessage() {
+    resultDiv.innerHTML = "";
+}
+
+function enableForm() {
+    durationInput.disabled = false;
+    styleSelect.disabled = false;
+}
+
+function disableForm() {
+    durationInput.disabled = true;
+    styleSelect.disabled = true;
+}
+
+gameForm.addEventListener("submit", async function (e) { // Make this function asynchronous
+    e.preventDefault();
+
+    disableForm();
+    hideResultMessage();
+
+    const duration = durationInput.value;
+    const timeUnit = document.getElementById("time-unit").value;
+    const numberOfGames = parseInt(document.getElementById("number-of-games").value);
+
+    let durationInSeconds;
+    switch (timeUnit) {
+        case "seconds":
+            durationInSeconds = duration;
+            break;
+        case "minutes":
+            durationInSeconds = duration * 60;
+            break;
+        case "hours":
+            durationInSeconds = duration * 3600;
+            break;
+        default:
+            durationInSeconds = duration;
+    }
+
+    const style = styleSelect.value;
+
+    for (let i = 0; i < numberOfGames; i++) {
+        try {
+            const response = await fetch("/generate_game", { // Use await here to wait for the response
+                method: "POST",
+                body: new URLSearchParams({ duration: durationInSeconds, style }),
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+            });
+            const data = await response.json(); // Await the data from response
+
+            if (data.success) {
+                resultDiv.innerHTML += `<p>${data.message}.</p>`;
+            } else {
+                resultDiv.innerHTML += `<p>Error: ${data.message}</p>`;
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            resultDiv.innerHTML += `<p>An error occurred.</p>`;
+        }
+    }
+
+    enableForm();
+});
+
+    </script>
+        
+</body>
+</html>
